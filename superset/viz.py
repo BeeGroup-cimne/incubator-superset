@@ -926,7 +926,7 @@ class BoxPlotViz(NVD3Viz):
             return set(above.tolist() + below.tolist())
 
         aggregate = [Q1, np.nanmedian, Q3, whisker_high, whisker_low, outliers]
-        df = df.groupby(form_data.get('groupby')).agg(aggregate)
+        df = df.groupby('relmonth_num').agg(aggregate)
         chart_data = self.to_series(df)
         return chart_data
 

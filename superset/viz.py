@@ -1471,6 +1471,8 @@ class HistogramViz(BaseViz):
         numeric_columns = self.form_data.get('all_columns_x')
         if numeric_columns is None:
             raise Exception(_('Must have at least one numeric column specified'))
+        if not isinstance(numeric_columns, list):
+            numeric_columns = [numeric_columns]
         self.columns = numeric_columns
         d['columns'] = numeric_columns + self.groupby
         # override groupby entry to avoid aggregation

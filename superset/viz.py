@@ -853,12 +853,14 @@ class BoxPlotViz(NVD3Viz):
     viz_type = 'box_plot'
     verbose_name = _('Box Plot')
     sort_series = False
-    is_timeseries = True
+    is_timeseries = False
 
     def to_series(self, df, classed='', title_suffix=''):
         label_sep = ' - '
         chart_data = []
-        for index_value, row in zip(df.index, df.to_dict(orient='records')):
+        months_str = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul',
+            'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+        for index_value, row in zip(df.index.astype(int), df.to_dict(orient='records')):
             if isinstance(index_value, tuple):
                 index_value = label_sep.join(index_value)
             boxes = defaultdict(dict)
@@ -867,11 +869,7 @@ class BoxPlotViz(NVD3Viz):
                     key = 'Q2'
                 boxes[label][key] = value
             for label, box in boxes.items():
-                if len(self.form_data.get('metrics')) > 1:
-                    # need to render data labels with metrics
-                    chart_label = label_sep.join([index_value, label])
-                else:
-                    chart_label = index_value
+                chart_label = months_str[index_value]
                 chart_data.append({
                     'label': chart_label,
                     'values': box,
@@ -926,7 +924,7 @@ class BoxPlotViz(NVD3Viz):
             return set(above.tolist() + below.tolist())
 
         aggregate = [Q1, np.nanmedian, Q3, whisker_high, whisker_low, outliers]
-        df = df.groupby(form_data.get('groupby')).agg(aggregate)
+        df = df.groupby('relmonth_num').agg(aggregate)
         chart_data = self.to_series(df)
         return chart_data
 

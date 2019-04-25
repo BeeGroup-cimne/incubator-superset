@@ -80,3 +80,8 @@ ghostdriver.log
 testCSV.csv
 .terser-plugin-cache/
 apache-superset-*.tar.gz*
+
+# Certificates
+server.crt
+server.key
+server.csr

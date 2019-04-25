@@ -855,12 +855,16 @@ class BoxPlotViz(NVD3Viz):
     sort_series = False
     is_timeseries = False
 
-    def to_series(self, df, classed='', title_suffix=''):
+    def to_series(self, df, classed='', title_suffix='', monthly=False):
         label_sep = ' - '
         chart_data = []
         months_str = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul',
             'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-        for index_value, row in zip(df.index.astype(int), df.to_dict(orient='records')):
+
+        def is_month(x):
+            return x <= 12
+
+        for index_value, row in zip(df.index, df.to_dict(orient='records')):
             if isinstance(index_value, tuple):
                 index_value = label_sep.join(index_value)
             boxes = defaultdict(dict)
@@ -869,7 +873,16 @@ class BoxPlotViz(NVD3Viz):
                     key = 'Q2'
                 boxes[label][key] = value
             for label, box in boxes.items():
-                chart_label = months_str[index_value]
+                if not monthly:
+                    if len(self.form_data.get('metrics')) > 1:
+                        # need to render data labels with metrics
+                        chart_label = label_sep.join([index_value, label])
+                    else:
+                        chart_label = index_value
+                else:
+                    index_value = int(index_value)
+                    chart_label = (months_str[index_value] if
+                        is_month(index_value) else index_value)
                 chart_data.append({
                     'label': chart_label,
                     'values': box,
@@ -924,8 +937,13 @@ class BoxPlotViz(NVD3Viz):
             return set(above.tolist() + below.tolist())
 
         aggregate = [Q1, np.nanmedian, Q3, whisker_high, whisker_low, outliers]
-        df = df.groupby('relmonth_num').agg(aggregate)
-        chart_data = self.to_series(df)
+        groupby_field = form_data.get('groupby')
+        monthly = False
+        if not groupby_field and 'month' in df.columns:
+            groupby_field = 'month'
+            monthly = True
+        df = df.groupby(groupby_field).agg(aggregate)
+        chart_data = self.to_series(df, monthly=monthly)
         return chart_data
 
 

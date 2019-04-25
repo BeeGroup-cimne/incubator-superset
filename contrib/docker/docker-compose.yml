@@ -1,26 +1,10 @@
-#
-# Licensed to the Apache Software Foundation (ASF) under one or more
-# contributor license agreements.  See the NOTICE file distributed with
-# this work for additional information regarding copyright ownership.
-# The ASF licenses this file to You under the Apache License, Version 2.0
-# (the "License"); you may not use this file except in compliance with
-# the License.  You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
-version: '2'
+version: '3'
 services:
   redis:
     image: redis:3.2
     restart: unless-stopped
-    ports:
-      - 6379:6379
+    #ports:
+      #- 16379:6379
     volumes:
       - redis:/data
 
@@ -29,14 +13,16 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_DB: superset
-      POSTGRES_PASSWORD: superset
-      POSTGRES_USER: superset
+      POSTGRES_PASSWORD: superset 
+      POSTGRES_USER: superset 
     ports:
-      - 5432:5432
+      - 127.0.0.1:15432:5432
     volumes:
       - postgres:/var/lib/postgresql/data
+      #- /hdd3/docker-volumes/superset_postgres/:/var/lib/postgresql/data
 
   superset:
+    #user: root:root
     build:
       context: ../../
       dockerfile: contrib/docker/Dockerfile
@@ -44,27 +30,41 @@ services:
     environment:
       POSTGRES_DB: superset
       POSTGRES_USER: superset
-      POSTGRES_PASSWORD: superset
+      POSTGRES_PASSWORD: superset 
       POSTGRES_HOST: postgres
       POSTGRES_PORT: 5432
       REDIS_HOST: redis
       REDIS_PORT: 6379
       # If using production, comment development volume below
-      #SUPERSET_ENV: production
-      SUPERSET_ENV: development
+      SUPERSET_ENV: production
+      #SUPERSET_ENV: development
     ports:
-      - 8088:8088
+      #- 10.8.0.1:18088:8088
+      - 18088:8088
     depends_on:
       - postgres
       - redis
     volumes:
       # this is needed to communicate with the postgres and redis services
       - ./superset_config.py:/home/superset/superset/superset_config.py
+      #- ./server.crt:/home/superset/server.crt
+      #- ./server.key:/home/superset/server.key
       # this is needed for development, remove with SUPERSET_ENV=production
       - ../../superset:/home/superset/superset
 
 volumes:
   postgres:
     external: false
+    driver: local
+    driver_opts:
+      type: 'none'
+      o: 'bind'
+      device: '/hdd3/docker-volumes/superset_postgres/'
   redis:
     external: false
+    driver: local
+    driver_opts:
+      type: 'none'
+      o: 'bind'
+      device: '/hdd3/docker-volumes/superset_redis/'
+
